@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Flower Shop</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo">🌸</div>
+                <h1>Flower Shop</h1>
+                <p>Welcome back! Please login to continue</p>
+            </div>
+
+            <div id="message"></div>
+
+            <div class="role-selector">
+                <div class="role-option active" data-role="CUSTOMER" onclick="selectRole('CUSTOMER')">
+                    <div class="role-option-icon">🛍️</div>
+                    <div class="role-option-title">Customer</div>
+                </div>
+                <div class="role-option" data-role="ADMIN" onclick="selectRole('ADMIN')">
+                    <div class="role-option-icon">👨‍💼</div>
+                    <div class="role-option-title">Admin</div>
+                </div>
+            </div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        class="form-control" 
+                        placeholder="Enter username"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="form-control" 
+                        placeholder="Enter password"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Login
+                </button>
+            </form>
+
+            <div class="credentials-hint">
+                <strong>Customer:</strong> ID: CUSTOMER, Password: CUSTOMER<br>
+                <strong>Admin:</strong> ID: ADMIN, Password: ADMIN
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let selectedRole = 'CUSTOMER';
+
+        function selectRole(role) {
+            selectedRole = role;
+            
+            // Update UI
+            document.querySelectorAll('.role-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            document.querySelector(`[data-role="${role}"]`).classList.add('active');
+            
+            // Auto-fill credentials
+            document.getElementById('username').value = role;
+            document.getElementById('password').value = role;
+        }
+
+        // Initialize with customer credentials
+        selectRole('CUSTOMER');
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(API.AUTH.LOGIN, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Redirect based on role
+                    if (data.user.role === 'admin') {
+                        window.location.href = '/frontend/admin/dashboard.html';
+                    } else {
+                        window.location.href = '/frontend/customer/catalog.html';
+                    }
+                } else {
+                    showMessage('message', data.detail || 'Login failed', 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('message', 'An error occurred. Please try again.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
